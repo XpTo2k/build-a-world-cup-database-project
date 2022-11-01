@@ -1,0 +1,32 @@
+#! /bin/bash
+
+if [[ $1 == "test" ]]
+then
+  PSQL="psql --username=postgres --dbname=worldcuptest -t --no-align -c"
+else
+  PSQL="psql --username=freecodecamp --dbname=worldcup -t --no-align -c"
+fi
+
+# Do not change code above this line. Use the PSQL variable above to query your database.
+$PSQL "TRUNCATE teams, games"
+cat games.csv | while IFS="," read YEAR ROUND WINNER OPPONENT WINNER_GOALS OPPONENT_GOALS
+do
+  if [[ $YEAR != "year" ]] #Ignore 1st row
+  then
+  
+    # TEAMS TABLE FILLER
+    # Insert winner team and echo successful
+    $PSQL "INSERT INTO teams(name) VALUES('$WINNER')"
+    # Insert opponent team and echo successful
+    $PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')"
+    
+    # GAMES TABLE FILLER
+    # TEAM IDs VARIABLES
+    WINNER_ID="$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'")"
+    OPPONENT_ID="$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'")"
+    # INSERT ROW PER LINE READ
+    $PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) 
+    VALUES($YEAR, '$ROUND', $WINNER_ID, $OPPONENT_ID, $WINNER_GOALS, $OPPONENT_GOALS);"
+
+  fi 
+done
